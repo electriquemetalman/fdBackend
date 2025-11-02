@@ -83,6 +83,57 @@ const ListFoodByCategory = async(req, res) => {
     }
 }
 
+// Update food
+
+const updateFood = async (req, res) => {
+    try{
+
+        let updateValue = {
+                name: req.body.name,
+                description: req.body.description,
+                price: req.body.price,
+                category: req.body.category,
+        }
+
+        if (req.file) {
+            let image_filename = `${req.file.filename}`;
+            updateValue = {
+                name: req.body.name,
+                description: req.body.description,
+                price: req.body.price,
+                image: image_filename,
+                category: req.body.category,
+            }
+      
+        }
+
+        // find food we want to update
+        const foodToUp = await foodModel.findById(req.params.id);
+         if (!foodToUp) {
+            return res.status(404).send({
+                success: false,
+                message: "Food not found",
+            });
+        } else {
+
+            const updatedFood = await foodModel.findByIdAndUpdate(foodToUp.id, updateValue, {new: true})
+            res.status(200).send({
+                success: true,
+                message: "Food Updated Successfully",
+                food: updatedFood
+            });
+        }
+
+    } catch(error){
+        res.status(500).send({
+            success: false,
+            message: "Failed to Update Food",
+            error: error.message,
+        })
+    }
+
+}
+
 //Remove food item
 
 const deleteFood = async(req, res) => {
@@ -115,4 +166,4 @@ const deleteFood = async(req, res) => {
     }
 }
 
-export { addFood, listFood, deleteFood, ListFoodByCategory };
+export { addFood, listFood, deleteFood, ListFoodByCategory, updateFood };
