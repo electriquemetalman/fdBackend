@@ -73,4 +73,48 @@ const placeOrder = async (req, res) => {
 
 }
 
-export {placeOrder}
+const verifyOrder = async (req, res) => {
+    const {orderId, success} = req.body;
+    try {
+        if (success == "true") {
+            await orderModel.findByIdAndUpdate(orderId,{payment:true});
+                res.status(200).send({
+                    success: true,
+                    message: "Paid successfully"
+                });
+        } else {
+            await orderModel.findByIdAndDelete(orderId);
+                res.status(200).send({
+                    success: false,
+                    message: "Paid fail"
+                });
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(401).send({
+            success: false,
+            message: "Order Fail",
+            error: error.message,
+        });
+    }
+}
+
+const userOrders = async (req, res) => {
+    try{
+        const userId = req.user.id;
+        const orders = await orderModel.find({userId});
+        res.status(200).send({
+            success: true,
+            message: "Get User Orders successfully",
+            orders: orders
+        });
+    } catch (error) {
+         res.status(401).send({
+            success: false,
+            message: "Get User Orders Fail",
+            error: error.message,
+        });
+    }
+}
+
+export {placeOrder, verifyOrder, userOrders}
