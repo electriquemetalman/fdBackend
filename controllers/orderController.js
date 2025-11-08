@@ -117,4 +117,39 @@ const userOrders = async (req, res) => {
     }
 }
 
-export {placeOrder, verifyOrder, userOrders}
+const listOrders = async (req, res) => {
+    try {
+        const orders = await orderModel.find({});
+        res.status(200).send({
+            success: true,
+            message: "Orders Listed successfully",
+            data: orders
+        });
+    } catch (error) {
+        res.status(401).send({
+            success: false,
+            message: "List Orders Fail",
+            error: error.message,
+        });
+    }
+}
+
+const updateStatus = async (req, res) => {
+    const orderId = req.body.orderId;
+    const orderStatus = {status: req.body.status};
+    try {
+        await orderModel.findByIdAndUpdate(orderId, orderStatus);
+        res.status(200).send({
+            success: true,
+            message: "Status Updated",
+        });
+    } catch (error) {
+        res.status(401).send({
+            success: false,
+            message: "Update Status Fail",
+            error: error.message,
+        });
+    }
+}
+
+export {placeOrder, verifyOrder, userOrders, listOrders, updateStatus}
