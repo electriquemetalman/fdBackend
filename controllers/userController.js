@@ -3,8 +3,8 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
 // Create token function 
-const createToken = (id) => {
-    return jwt.sign({id},process.env.JWT_SECRET)
+const createToken = (id, role) => {
+    return jwt.sign({id, role}, process.env.JWT_SECRET, { expiresIn: '1d' })
 }
 
 //login user
@@ -29,7 +29,7 @@ const loginUser = async (req,res) => {
             });
         }
 
-        const token = createToken(user._id);
+        const token = createToken(user._id, user.role);
         res.status(200).send({
             success: true,
             message: "User Login Successfully",
@@ -72,7 +72,7 @@ const registerUser = async (req,res) => {
             password : hashedPassword
         })
        const user = await newUser.save();
-       const token = createToken(user._id);
+       const token = createToken(user._id, user.role);
        res.status(201).send({
             success: true,
             message: "User Registered Successfully",
