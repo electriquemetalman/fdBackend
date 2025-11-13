@@ -5,7 +5,7 @@ import fs from "fs";
 const addFood = async (req, res) => {
 
     if (!req.file) {
-      return res.status(400).json({ success: false, message: "Aucune image fournie" });
+      return res.status(400).json({ success: false, message: "Image not found" });
     }
 
     let image_filename = `${req.file.filename}`;

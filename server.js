@@ -18,6 +18,7 @@ const port = process.env.PORT
 // middlewares
 app.use(express.json())
 app.use("/images", express.static("uploads"));
+app.use("/profiles", express.static("profileImages"));
 app.use(cors())
 
 //db connection
