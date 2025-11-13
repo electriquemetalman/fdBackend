@@ -1,6 +1,7 @@
 import userModel from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import fs from "fs";
 
 // Create token function 
 const createToken = (id, role) => {
@@ -90,7 +91,78 @@ const registerUser = async (req,res) => {
     }
 }
 
-export {loginUser, registerUser}
+const updateUserProfile = async (req,res) =>{
+    try {
+         if (!req.file) {
+            return res.status(400).send({ success: false, message: "Image not found" });
+        }
+
+        let image_filename = `${req.file.filename}`;
+
+        const userId = req.user.id;
+
+        const userToUpdate = await userModel.findById(userId);
+        if (!userToUpdate) {
+            return res.status(404).send({
+                success: false,
+                message: "User not found",
+            });
+        } else {
+
+            // delete prevers profile in profileImages file
+            fs.unlink(`profileImages/${userToUpdate.profile}`, ()=>{});
+
+            const updatedUser = await userModel.findByIdAndUpdate(userToUpdate.id, {profile: image_filename}, {new: true})
+            res.status(200).send({
+                success: true,
+                message: "Profile Updated Successfully",
+                user: updatedUser
+            });
+        }
+
+    } catch (error) {
+        return res.status(404).send({
+            success: false,
+            message: "Failed to update profile",
+            error: error.message,
+        });
+    }
+
+}
+
+const updateUser = async (req, res) => {
+    try {
+
+        let updateValue = {
+                name: req.body.name,
+                email: req.body.email,
+        }
+
+        const userId = req.user.id;
+        const userToUpdate = await userModel.findById(userId);
+        if (!userToUpdate) {
+            return res.status(404).send({
+                success: false,
+                message: "User not found",
+            });
+        } else {
+            const updatedUser = await userModel.findByIdAndUpdate(userToUpdate.id, updateValue, {new: true})
+            res.status(200).send({
+                success: true,
+                message: "User Updated Successfully",
+                user: updatedUser
+            });
+        }
+    } catch (error) {
+        res.status(401).send({
+            success: false,
+            message: "Failed to Update User",
+            error: error.message,
+        })
+    }    
+}
+
+export {loginUser, registerUser, updateUserProfile, updateUser};
 
 
 
