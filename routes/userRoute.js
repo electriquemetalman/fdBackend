@@ -1,5 +1,5 @@
 import express from "express";
-import { loginUser, registerUser, updateUserProfile, updateUser } from "../controllers/userController.js";
+import { loginUser, registerUser, updateUserProfile, updateUser, getUserById } from "../controllers/userController.js";
 import multer from "multer";
 import validateUser from "../middleware/validateUser.js";
 import  authMiddleware  from "../middleware/auth.js";
@@ -23,5 +23,6 @@ userRouter.post("/register", validateUser, registerUser);
 userRouter.post("/login", loginUser);
 userRouter.post("/updateProfile", authMiddleware, authorizeRole(ROLES.ADMIN), upload.single("profile"), updateUserProfile);
 userRouter.post("/updateUser", authMiddleware, updateUser);
+userRouter.get("/getUser", authMiddleware, getUserById);
 
 export default userRouter;
