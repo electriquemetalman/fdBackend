@@ -162,7 +162,32 @@ const updateUser = async (req, res) => {
     }    
 }
 
-export {loginUser, registerUser, updateUserProfile, updateUser};
+const getUserById = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await userModel.findById(userId);  
+        if (!user) {
+            return res.status(404).send({
+                success: false,
+                message: "User not found",
+            });
+        } else {
+            res.status(200).send({
+                success: true,
+                message: "User found",
+                user: user
+            });
+        }
+    } catch (error) {
+        res.status(500).send({
+            success: false,
+            message: "Failed to get user",
+            error: error.message,
+        });
+    }
+}
+
+export {loginUser, registerUser, updateUserProfile, updateUser, getUserById};
 
 
 
