@@ -1,11 +1,13 @@
 import foodModel from "../models/foodModel.js";
+import notificationModel from "../models/notificationModel.js";
+import { io } from "../server.js";
 import fs from "fs";
 
 // Create Food Item
 const addFood = async (req, res) => {
 
     if (!req.file) {
-      return res.status(400).json({ success: false, message: "Image not found" });
+      return res.status(400).send({ success: false, message: "Image not found" });
     }
 
     let image_filename = `${req.file.filename}`;
@@ -19,6 +21,21 @@ const addFood = async (req, res) => {
     });
     try {
         await newFood.save();
+
+        // Create a notification for the new food item
+        const newNotification = new notificationModel({
+            message: `New food item added: ${newFood.name}`,
+            foodId: newFood._id,
+        });
+        await newNotification.save();
+
+        // Emit the notification to all connected clients via Socket.io
+        io.emit("newNotification", {
+            message: newNotification.message,
+            food: newFood,
+            createdAt: newNotification.createdAt,
+        });
+
         res.status(201).send({
             success: true,
             message: "Food Item Added Successfully",
@@ -150,6 +167,20 @@ const deleteFood = async(req, res) => {
 
         // delete image in uploads file
         fs.unlink(`uploads/${food.image}`, ()=>{})
+
+        // Create a notification for the new food item
+        const newNotification = new notificationModel({
+            message: `New food deleted: ${food.name}`,
+            foodId: food._id,
+        });
+        await newNotification.save();
+
+        // Emit the notification to all connected clients via Socket.io
+        io.emit("newNotification", {
+            message: newNotification.message,
+            food: food,
+            createdAt: newNotification.createdAt,
+        });
 
         //delete food in database
         await foodModel.findByIdAndDelete(food.id)
