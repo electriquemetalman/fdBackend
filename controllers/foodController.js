@@ -1,5 +1,6 @@
 import foodModel from "../models/foodModel.js";
 import notificationModel from "../models/notificationModel.js";
+import userModel from "../models/userModel.js";
 import { io } from "../server.js";
 import fs from "fs";
 
@@ -22,18 +23,24 @@ const addFood = async (req, res) => {
     try {
         await newFood.save();
 
-        // Create a notification for the new food item
-        const newNotification = new notificationModel({
+        // get all users to notify
+        const users = await userModel.find({}, '_id');
+
+        // Create a notification for ech user about the new food item
+        const notificationsToInsert = users.map(user => ({
+            userId: user._id,
             message: `New food item added: ${newFood.name}`,
             foodId: newFood._id,
-        });
-        await newNotification.save();
+        }));
+
+        // Insert all notifications at once
+        const newNotifications = await notificationModel.insertMany(notificationsToInsert);
 
         // Emit the notification to all connected clients via Socket.io
         io.emit("newNotification", {
-            message: newNotification.message,
+            message: `New food item added: ${newFood.name}`,
             food: newFood,
-            createdAt: newNotification.createdAt,
+            createdAt: new Date(),
         });
 
         res.status(201).send({
@@ -168,18 +175,24 @@ const deleteFood = async(req, res) => {
         // delete image in uploads file
         fs.unlink(`uploads/${food.image}`, ()=>{})
 
-        // Create a notification for the new food item
-        const newNotification = new notificationModel({
-            message: `New food deleted: ${food.name}`,
+         // get all users to notify
+        const users = await userModel.find({}, '_id');
+
+        // Create a notification for ech user about the new food item
+        const notificationsToInsert = users.map(user => ({
+            userId: user._id,
+            message: `New food item added: ${food.name}`,
             foodId: food._id,
-        });
-        await newNotification.save();
+        }));
+
+        // Insert all notifications at once
+        const newNotifications = await notificationModel.insertMany(notificationsToInsert);
 
         // Emit the notification to all connected clients via Socket.io
         io.emit("newNotification", {
-            message: newNotification.message,
+            message: `New food item deleted: ${food.name}`,
             food: food,
-            createdAt: newNotification.createdAt,
+            createdAt: new Date(),
         });
 
         //delete food in database
