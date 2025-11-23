@@ -1,6 +1,8 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
 import Stripe from "stripe"
+import { io } from "../server.js";
+import notificationModel from "../models/notificationModel.js";
 
 
 
@@ -77,7 +79,30 @@ const verifyOrder = async (req, res) => {
     const {orderId, success} = req.body;
     try {
         if (success == "true") {
-            await orderModel.findByIdAndUpdate(orderId,{payment:true});
+           const updatedOrder = await orderModel.findByIdAndUpdate(orderId,{payment:true});
+
+            // get all users to notify
+            const users = await userModel.find({role: "admin"});
+
+            // Create a notification for ech user about the new food item
+            const notificationsToInsert = users.map(user => ({
+                userId: user._id,
+                message: "New order placed",
+                foodId: updatedOrder._id,
+            }));
+            
+            // Insert all notifications at once
+            const newNotifications = await notificationModel.insertMany(notificationsToInsert);
+
+            // Emit the notification to all connected clients via Socket.io
+            users.forEach(user => {
+                io.to(user._id.toString()).emit("newNotification", {
+                    message: "New order placed",
+                    order: updatedOrder,
+                    createdAt: new Date(),
+                });
+            });
+
                 res.status(200).send({
                     success: true,
                     message: "Paid successfully"
@@ -138,7 +163,25 @@ const updateStatus = async (req, res) => {
     const orderId = req.body.orderId;
     const orderStatus = {status: req.body.status};
     try {
-        await orderModel.findByIdAndUpdate(orderId, orderStatus);
+       const updatedOrder = await orderModel.findByIdAndUpdate(orderId, orderStatus);
+
+            // get all users to notify
+            const users = await userModel.findById(updatedOrder.userId);
+
+            // Create a notification for ech user about the new food item
+             const newNotification = await notificationModel.create({
+                userId: users._id,
+                message: `Your order status has been updated to ${updatedOrder.status}`,
+                foodId: updatedOrder._id
+            });
+
+            // Emit the notification to all connected clients via Socket.io
+            io.to(users._id.toString()).emit("newNotification", {
+                message: "Your order status has been updated to " + updatedOrder.status,
+                order: updatedOrder,
+                createdAt: new Date(),
+            });
+
         res.status(200).send({
             success: true,
             message: "Status Updated",

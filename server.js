@@ -33,7 +33,11 @@ export const io = new Server(server, {
 //wen socket connection is established and disconnected
 io.on("connection", (socket) => {
   console.log("A user connected: " + socket.id);
-  
+
+  socket.on("joinRoom", (userId) => {
+    socket.join(userId);
+    console.log(`User with ID: ${userId} joined room`);
+  });
 
   socket.on("disconnect", () => {
     console.log("User disconnected: " + socket.id);
