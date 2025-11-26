@@ -21,7 +21,7 @@ const upload = multer({storage: storage});
 
 userRouter.post("/register", validateUser, registerUser);
 userRouter.post("/login", loginUser);
-userRouter.post("/updateProfile", authMiddleware, authorizeRole(ROLES.ADMIN), upload.single("profile"), updateUserProfile);
+userRouter.post("/updateProfile", authMiddleware, authorizeRole(ROLES.ADMIN, ROLES.USER), upload.single("profile"), updateUserProfile);
 userRouter.post("/updateUser", authMiddleware, updateUser);
 userRouter.get("/getUser", authMiddleware, getUserById);
 
