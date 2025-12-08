@@ -1,5 +1,6 @@
 import foodModel from "../models/foodModel.js";
 import notificationModel from "../models/notificationModel.js";
+import { notificationQueue } from "../queues/notificationQueue.js";
 import userModel from "../models/userModel.js";
 import { io } from "../server.js";
 import fs from "fs";
@@ -23,25 +24,8 @@ const addFood = async (req, res) => {
     try {
         await newFood.save();
 
-        // get all users to notify
-        const users = await userModel.find({}, '_id');
-
-        // Create a notification for ech user about the new food item
-        const notificationsToInsert = users.map(user => ({
-            userId: user._id,
-            message: `New food item added: ${newFood.name}`,
-            foodId: newFood._id,
-        }));
-
-        // Insert all notifications at once
-        const newNotifications = await notificationModel.insertMany(notificationsToInsert);
-
-        // Emit the notification to all connected clients via Socket.io
-        io.emit("newNotification", {
-            message: `New food item added: ${newFood.name}`,
-            food: newFood,
-            createdAt: new Date(),
-        });
+        // Enqueue a job to notify users about the new food item
+        await notificationQueue.add("foodAdded", { food: newFood });
 
         res.status(201).send({
             success: true,
@@ -175,25 +159,8 @@ const deleteFood = async(req, res) => {
         // delete image in uploads file
         fs.unlink(`uploads/${food.image}`, ()=>{})
 
-         // get all users to notify
-        const users = await userModel.find({}, '_id');
-
-        // Create a notification for ech user about the new food item
-        const notificationsToInsert = users.map(user => ({
-            userId: user._id,
-            message: `New food item added: ${food.name}`,
-            foodId: food._id,
-        }));
-
-        // Insert all notifications at once
-        const newNotifications = await notificationModel.insertMany(notificationsToInsert);
-
-        // Emit the notification to all connected clients via Socket.io
-        io.emit("newNotification", {
-            message: `New food item deleted: ${food.name}`,
-            food: food,
-            createdAt: new Date(),
-        });
+        // Enqueue a job to notify users about the deleted food item
+        await notificationQueue.add("foodDeleted", { food: food });
 
         //delete food in database
         await foodModel.findByIdAndDelete(food.id)
