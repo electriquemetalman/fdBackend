@@ -3,6 +3,8 @@ import cors from "cors"
 import dotenv from "dotenv"
 import http from "http"
 import { Server } from "socket.io"
+import swaggerUi from "swagger-ui-express"
+import swaggerSpec  from "./swagger/swagger.js";
 
 import { connectDB } from "./config/db.js"
 import foodRouter from "./routes/foodRoute.js"
@@ -60,6 +62,8 @@ app.use("/api/user", userRouter)
 app.use("/api/cart", cartRouter)
 app.use("/api/order", orderRouter)
 app.use("/api/notification", notificationRouter);
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+console.log("Swagger Docs available at http://localhost:4000/api/docs");
 
 app.get("/", (req, res) => {
   res.status(200).send("Hello from the backend!")

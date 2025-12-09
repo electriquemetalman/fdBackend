@@ -18,9 +18,110 @@ const storage = multer.diskStorage({
 
 const upload = multer({storage: storage});
 
-
+/**
+ * @swagger
+ * /api/food/add:
+ *  post:
+ *     summary: Add a food item
+ *     tags: [Food]
+ *     description: Requires ADMIN role
+ *     security:
+ *          - bearerAuth: []
+ *     requestBody:
+ *          required: true
+ *          content:
+ *              multipart/form-data:
+ *                  schema:
+ *                      type: object
+ *                      properties:
+ *                          name:
+ *                              type: string
+ *                          description:
+ *                              type: string
+ *                          price:
+ *                              type: number
+ *                          image:
+ *                              type: string
+ *                              format: binary
+ *     responses:
+ *          201:
+ *              description: Food item add successfully.
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          $ref: '#/components/Food'
+ *          400:
+ *              description: Invalid input  
+ */
 foodRouter.post("/add", authMiddleware, upload.single("image"), authorizeRole(ROLES.ADMIN), addFood);
+/**
+ * @swagger
+ * /api/food/list:
+ *  get:
+ *     summary: List all food items
+ *     tags: [Food]
+ *     description: Returns a list of all available food items.
+ *     responses:
+ *          200:
+ *              description: List of Food items listed successfully.
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *                          properties:
+ *                              success:
+ *                                  type: boolean
+ *                                  example: true
+ *                              message:
+ *                                  type: string
+ *                                  example: Food list fetched successfully
+ *                              data:
+ *                                  type: array
+ *                                  items:
+ *                                      $ref: '#/components/Food'
+ *          500:
+ *              description: Server error  
+ */
 foodRouter.get("/list", listFood);
+/**
+ * @swagger
+ * /api/food/delete/:id:
+ *  delete:
+ *     summary: Delete food items
+ *     tags: [Food]
+ *     security:
+ *          - bearerAuth: []
+ *     description: Delete one of available food items by Id. **Requires ADMIN role**
+ *     parameters:
+ *          - in: path
+ *            name: id
+ *            schema:
+ *              type: string
+ *            required: true
+ *            description: ID of the food to delete
+ *     responses:
+ *          200:
+ *              description: Food items deleted successfully.
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *                          properties:
+ *                              success:
+ *                                  type: boolean
+ *                                  example: true
+ *                              message:
+ *                                  type: string
+ *                                  example: Food Deleted successfully
+ *          401:
+ *              description: Unauthorized - token missing or invalid.
+ *          403:
+ *              description: Forbidden - Admin role required.
+ *          404:
+ *              description: Food item not found.
+ *          500:
+ *              description: Server error. 
+ */
 foodRouter.delete("/delete/:id", authMiddleware, authorizeRole(ROLES.ADMIN), deleteFood);
 foodRouter.get("/category/:category", ListFoodByCategory);
 foodRouter.put("/update/:id",upload.single('image'), updateFood);
