@@ -29,10 +29,16 @@ const upload = multer({storage: storage});
  *          - bearerAuth: []
  *     requestBody:
  *          required: true
+ *              - name
+ *              - description
+ *              - price
+ *              - image
  *          content:
  *              multipart/form-data:
  *                  schema:
  *                      type: object
+ *                      required:
+ * 
  *                      properties:
  *                          name:
  *                              type: string
@@ -51,7 +57,9 @@ const upload = multer({storage: storage});
  *                      schema:
  *                          $ref: '#/components/Food'
  *          400:
- *              description: Invalid input  
+ *              description: Invalid input
+ *          500:
+ *              description: Internal Server error  
  */
 foodRouter.post("/add", authMiddleware, upload.single("image"), authorizeRole(ROLES.ADMIN), addFood);
 /**
@@ -79,8 +87,10 @@ foodRouter.post("/add", authMiddleware, upload.single("image"), authorizeRole(RO
  *                                  type: array
  *                                  items:
  *                                      $ref: '#/components/Food'
+ *          401:
+ *              description: error som ting wrong
  *          500:
- *              description: Server error  
+ *              description: Internal Server error  
  */
 foodRouter.get("/list", listFood);
 /**
@@ -120,7 +130,7 @@ foodRouter.get("/list", listFood);
  *          404:
  *              description: Food item not found.
  *          500:
- *              description: Server error. 
+ *              description: Internal Server error. 
  */
 foodRouter.delete("/delete/:id", authMiddleware, authorizeRole(ROLES.ADMIN), deleteFood);
 foodRouter.get("/category/:category", ListFoodByCategory);
